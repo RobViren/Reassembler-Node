@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Reassembler</title>
+    <link href="node_modules/bulma/css/bulma.css"rel="stylesheet">
+  </head>
+  <body>
+    <div class="columns">
+      <div class="column is-8 is-offset-2">
+        <div class="box">
+          <div class="content">
+            <h1>The Reassembler Program!</h1>
+            <p id="Intro">All you need to do is fill out the forum below and click "Run Program" and it will start to evolve ships to beat your designs</p>
+          </div>
+          <label class="label">Select Your Fleets File</label>
+          <div class="field has-addons">
+            <div class="control">
+              <a class="button is-info" id="FleetButton">Select File</a>
+            </div>
+            <div class="control">
+                <p class="input" id="ShowFleet"></p>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Maximum Fleet P Value</label>
+            <div class="control">
+              <input class="input" type="number" placeholder="16000" id="max_fleet_value">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Maximum Single Ship P Vlaue</label>
+            <div class="control">
+              <input class="input" type="number" placeholder="16000" id="max_ship_value">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Minimum Single Ship Value</label>
+            <div class="control">
+              <input class="input" type="number" placeholder="100" id="min_ship_value">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Maximum Number of Blocks</label>
+            <div class="control">
+              <input class="input" type="number" placeholder="10000" id="max_blocks">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Faction of the Generated Fleets</label>
+            <div class="control">
+              <span class="select">
+                <select id="faction">
+                  <option>2:  Farmers</option>
+                  <option>3:  Reds</option>
+                  <option>8:  Terrans</option>
+                  <option>12: Bees</option>
+                  <option>15: Sentinels</option>
+                </select>
+              </span>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">The Symmetry of the Generated Fleets</label>
+            <div class="control">
+              <span class="select">
+                <select id="symmetry">
+                  <option>0: No Symmetry</option>
+                  <option>1: Symmetric</option>
+                  <option>2: A Random Mix of Symmetric and Not</option>
+                </select>
+              </span>
+            </div>
+          </div>
+          <div class="field has-addons">
+            <div class="control">
+              <a class="button is-info" id="Run">Run Program</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    // You can also require other files to run in this process
+    require('./renderer.js')
+    </script>
+  </body>
+</html>
