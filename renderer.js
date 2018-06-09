@@ -1,4 +1,5 @@
 const {dialog} = require('electron').remote
+require("./src/Reassembler");
 
 var target_fleet;
 var log_path = "C:\\Users\\" + process.env.USERNAME + "\\Saved Games\\Reassembly\\data";
@@ -71,21 +72,5 @@ run.addEventListener("click", () => {
         alert(res.error);
         return
     }
-    runThing();
 });
 
-const { spawn } = require('child_process');
-runThing = () => {
-    const bat = spawn('cmd.exe', ['/c', 'bin\\FB.exe ' + config.max_fleet_value + " " + config.max_ship_value + " " + config.min_ship_value + " " + config.max_blocks + " " + config.faction + " " + config.symmetry + " ships\\asdawd.lua"]);
-    bat.stdout.on('data', (data) => {
-    console.log(data.toString());
-    });
-
-    bat.stderr.on('data', (data) => {
-    console.log(data.toString());
-    });
-
-    bat.on('exit', (code) => {
-    console.log(`Child exited with code ${code}`);
-    });
-}
