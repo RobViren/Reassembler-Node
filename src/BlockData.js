@@ -1,3 +1,5 @@
+"use strict";
+
 var fs = require("fs");
 
 var block_data = {};
@@ -149,7 +151,8 @@ function loadData(){
                 }
             }
         } else {
-            //console.log("No Shape ",element);
+            console.log("No Shape ",element);
+            block_data[element.ident] = undefined;
         }
     });
 
@@ -200,15 +203,55 @@ function loadData(){
             }
         }
     });
-
-    console.log(faction_blocks);
-
 }
+
 
 loadData();
 
+function getAngles(b) {
+    var dx = [];
+    var dy = [];
+    var angle = [];
+    var ports = [];
+    var thruster = [];
 
-module.exports ={
+    for(var i = 1; i < b.verts.length; i++){
+        dx.push(b.verts[i-1][0] - b.verts[i][0]);
+        dy.push(b.verts[i-1][1] - b.verts[i][1]);
+    }
+    dx.push(b.verts[b.verts.length-1][0] - b.verts[0][0]);
+    dy.push(b.verts[b.verts.length-1][1] - b.verts[0][1]);
+
+    for(var i = 0; i < b.ports.length; i++){
+        ports.push([-((dx[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][0],-((dy[b.ports[i][0]]) * (b.ports[i][1]) - b.verts[b.ports[i][0]][1])])
+    }
+
+    console.log(b.verts)
+    console.log(ports)
+    for(var i = 0; i < dx.length; i++){
+        if(dy[i] === 0){
+            if(dx[i] > 0){
+                angle.push(270);
+            } else {
+                angle.push(90);
+            }
+        } else if(dx[i] === 0) {
+            if(dy[i] > 0){
+                angle.push(0);
+            } else {
+                angle.push(180);
+            }
+        } else {
+            angle.push(Math.atan(dy[i]/dx[i]) * 180.0/Math.PI);
+        }
+    }
+    return(angle);
+}
+
+var b = block_data[802];
+console.log(getAngles(b))
+
+module.exports = {
     block_data: block_data,
     faction_blocks: faction_blocks
 }
