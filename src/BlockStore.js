@@ -94,9 +94,8 @@ function translate(x,y){
 		this.block_data.ports[i][1] += y;
 	}
 }
-
+var rounding_factor = 10000;
 function roundBlock(){
-	var rounding_factor = 10000;
 	this.x = Math.round(this.x * rounding_factor) / rounding_factor;
 	this.y = Math.round(this.y * rounding_factor) / rounding_factor;
 	this.angle = Math.round(this.angle * rounding_factor) / rounding_factor;

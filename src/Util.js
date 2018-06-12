@@ -1,5 +1,9 @@
 //Utility functions
+const rounding_factor = 10000;
 
+function round(num){
+	return(Math.round(num * rounding_factor) / rounding_factor)
+}
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
@@ -29,8 +33,9 @@ function copyObject(original){
 
 
 module.exports = {
-  getRandomInt: getRandomInt,
-  doesRepeat: doesRepeat,
-  distance, distance,
-  copyObject: copyObject
+	round: round,
+	getRandomInt: getRandomInt,
+	doesRepeat: doesRepeat,
+	distance, distance,
+	copyObject: copyObject
 };

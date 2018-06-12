@@ -1,6 +1,7 @@
 "use strict";
 
 var fs = require("fs");
+var util = require("./Util");
 
 var block_data = {};
 var faction_blocks = {
@@ -156,6 +157,12 @@ function loadData(){
         }
     });
 
+    //Reshape
+    json_block_data.forEach(element => {
+        block_data[element.ident].ports = getPorts(block_data[element.ident]);
+        block_data[element.ident].verts = getVerts(block_data[element.ident]);
+    });
+
     //make faction-blocks
     json_block_data.forEach(element => {
 
@@ -208,13 +215,10 @@ function loadData(){
 
 loadData();
 
-function getAngles(b) {
+function getPorts(b) {
     var dx = [];
     var dy = [];
-    var angle = [];
     var ports = [];
-    var thruster = [];
-
     for(var i = 1; i < b.verts.length; i++){
         dx.push(b.verts[i-1][0] - b.verts[i][0]);
         dy.push(b.verts[i-1][1] - b.verts[i][1]);
@@ -222,35 +226,89 @@ function getAngles(b) {
     dx.push(b.verts[b.verts.length-1][0] - b.verts[0][0]);
     dy.push(b.verts[b.verts.length-1][1] - b.verts[0][1]);
 
+    //Got normals and ports
     for(var i = 0; i < b.ports.length; i++){
-        ports.push([-((dx[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][0],-((dy[b.ports[i][0]]) * (b.ports[i][1]) - b.verts[b.ports[i][0]][1])])
-    }
+        var port = {};
+        port.x = util.round(-((dx[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][0]);
+        port.y = util.round(-((dy[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][1]);
 
-    console.log(b.verts)
-    console.log(ports)
-    for(var i = 0; i < dx.length; i++){
-        if(dy[i] === 0){
-            if(dx[i] > 0){
-                angle.push(270);
+        if(b.ports[i].length > 2 ){
+           port.type = (b.ports[i][2]);
+        }
+
+        if(dy[b.ports[i][0]] === 0){
+            if(dx[b.ports[i][0]] > 0){
+                port.angle = (270);
             } else {
-                angle.push(90);
+                port.angle = (90);
             }
-        } else if(dx[i] === 0) {
-            if(dy[i] > 0){
-                angle.push(0);
+        } else if(dx[b.ports[i][0]] === 0) {
+            if(dy[b.ports[i][0]] > 0){
+                port.angle = (0);
             } else {
-                angle.push(180);
+                port.angle = (180);
             }
         } else {
-            angle.push(Math.atan(dy[i]/dx[i]) * 180.0/Math.PI);
+            if(b.verts[b.ports[i][0]][1] > 0){
+                port.angle = util.round(Math.atan(dy[b.ports[i][0]]/dx[b.ports[i][0]]) * 180/Math.PI + 90);
+            } else {
+                port.angle = util.round(Math.atan(dy[b.ports[i][0]]/dx[b.ports[i][0]]) * 180/Math.PI + 270);
+            }
         }
+        ports.push(port);
     }
-    return(angle);
+    if(b.ident === 827){
+        console.log()
+    }
+    return(ports);
 }
 
-var b = block_data[802];
-console.log(getAngles(b))
+function getVerts(b) {
+    var verts = [];
+    for(var i = 0; i < b.verts.length; i++){
+        var vert = {};
+        vert.x = b.verts[i][0];
+        vert.y = b.verts[i][1];
+        verts.push(vert);
+    }
 
+    return(verts)
+}
+
+function drawBlock(b,x,y){
+    var offset_x = x;
+    var offset_y = y;
+    var zoom = 10.0;
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo((b.verts[b.verts.length-1].x + offset_x) * zoom,-(b.verts[b.verts.length-1].y - offset_y) * zoom);
+    for(var i = 0; i < b.verts.length; i++){
+        ctx.lineTo((b.verts[i].x + offset_x) * zoom,-(b.verts[i].y - offset_y) * zoom);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc((offset_x) * zoom, -(-offset_y) * zoom, 10, 0, 2 * Math.PI, false);
+    ctx.stroke();
+
+    for(var i = 0; i < b.ports.length; i++){
+        ctx.beginPath();
+        ctx.arc((b.ports[i].x + offset_x) * zoom, -(b.ports[i].y - offset_y) * zoom, 10, 0, 2 * Math.PI, false);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo((b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y) * zoom);
+        ctx.lineTo((b.ports[i].x + offset_x + 10 * Math.cos(b.ports[i].angle * Math.PI/180)) * zoom,-(b.ports[i].y - offset_y + 10 * Math.sin(b.ports[i].angle * Math.PI/180)) * zoom)
+        ctx.stroke();
+    }
+
+    console.log(b);
+}
+
+drawBlock(block_data[827],25,50);
+drawBlock(block_data[828],50,50);
+//827
 module.exports = {
     block_data: block_data,
     faction_blocks: faction_blocks
