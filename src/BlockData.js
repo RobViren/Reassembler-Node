@@ -229,8 +229,11 @@ function getPorts(b) {
     //Got normals and ports
     for(var i = 0; i < b.ports.length; i++){
         var port = {};
+
+
         port.x = util.round(-((dx[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][0]);
         port.y = util.round(-((dy[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][1]);
+        
 
         if(b.ports[i].length > 2 ){
            port.type = (b.ports[i][2]);
@@ -283,8 +286,10 @@ function drawBlock(b,x,y){
     var ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.moveTo((b.verts[b.verts.length-1].x + offset_x) * zoom,-(b.verts[b.verts.length-1].y - offset_y) * zoom);
+    ctx.font = "12px Arial";
     for(var i = 0; i < b.verts.length; i++){
         ctx.lineTo((b.verts[i].x + offset_x) * zoom,-(b.verts[i].y - offset_y) * zoom);
+        ctx.strokeText(i,(b.verts[i].x + offset_x) * zoom,-(b.verts[i].y - offset_y) * zoom);
     }
     ctx.stroke();
 
@@ -301,6 +306,7 @@ function drawBlock(b,x,y){
         ctx.moveTo((b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y) * zoom);
         ctx.lineTo((b.ports[i].x + offset_x + 10 * Math.cos(b.ports[i].angle * Math.PI/180)) * zoom,-(b.ports[i].y - offset_y + 10 * Math.sin(b.ports[i].angle * Math.PI/180)) * zoom)
         ctx.stroke();
+        ctx.strokeText(i,(b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y -1) * zoom);
     }
 
     console.log(b);
