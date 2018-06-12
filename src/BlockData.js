@@ -230,11 +230,9 @@ function getPorts(b) {
     for(var i = 0; i < b.ports.length; i++){
         var port = {};
 
-
         port.x = util.round(-((dx[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][0]);
         port.y = util.round(-((dy[b.ports[i][0]]) * (b.ports[i][1])) + b.verts[b.ports[i][0]][1]);
         
-
         if(b.ports[i].length > 2 ){
            port.type = (b.ports[i][2]);
         }
@@ -260,9 +258,24 @@ function getPorts(b) {
         }
         ports.push(port);
     }
-    if(b.ident === 827){
-        console.log()
+
+    //Check angles
+    var thing = 5;
+    for(var i = 0; i < ports.length; i++){
+        var x = ports[i].x + Math.cos(ports[i].angle / 180 * Math.PI) * 5;
+        var y = ports[i].y + Math.sin(ports[i].angle / 180 * Math.PI) * 5;
+
+        var d1 = util.distance(0,0,ports[i].x,ports[i].y);
+        var d2 = util.distance(0,0,x,y);
+
+        if(d2 < d1){
+            ports[i].angle += 180;
+            while(ports[i].angle < 0.0) ports[i].angle+= 360.0;
+            while(ports[i].angle >= 360.0) ports[i].angle -= 360.0;
+            ports[i].angle = util.round(ports[i].angle);
+        }
     }
+    
     return(ports);
 }
 
@@ -312,9 +325,6 @@ function drawBlock(b,x,y){
     console.log(b);
 }
 
-drawBlock(block_data[827],25,50);
-drawBlock(block_data[828],50,50);
-//827
 module.exports = {
     block_data: block_data,
     faction_blocks: faction_blocks
