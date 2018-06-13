@@ -170,50 +170,52 @@ function loadData(){
             if(element.features.includes("COMMAND")){
                 if(checkFaction(element.group)){
                     faction_blocks[element.group].command.push(element.ident);
+                    block_data[element.ident].type = "command";
                 }
             } else {
                 if(element.features.includes("THRUSTER")){
                     if(checkFaction(element.group)){
                         faction_blocks[element.group].thruster.push(element.ident);
+                        block_data[element.ident].type = "thruster";
                     }
                 }
 
                 else if(element.features.includes("CANNON") || element.features.includes("TURRET") || element.features.includes("MELEE") || element.features.includes("LASER") || element.features.includes("LAUNCHER")){
                     if(checkFaction(element.group)){
                         faction_blocks[element.group].weapon.push(element.ident);
+                        block_data[element.ident].type = "weapon";
                     }
                 } 
 
                 else if(element.features.includes("SHIELD")){
                     if(checkFaction(element.group)){
                         faction_blocks[element.group].shield.push(element.ident);
+                        block_data[element.ident].type = "shield";
                     }
                 }
 
                 else if(element.features.includes("GENERATOR")){
                     if(checkFaction(element.group)){
                         faction_blocks[element.group].generator.push(element.ident);
+                        block_data[element.ident].type = "generator";
                     }
                 } 
 
                 else {
                     if(checkFaction(element.group)){
                         faction_blocks[element.group].other.push(element.ident);
+                        block_data[element.ident].type = "other";
                     }
                 } 
-
-
             }
         } else {
             if(checkFaction(element.group)){
                 faction_blocks[element.group].hull.push(element.ident);
+                block_data[element.ident].type = "hull";
             }
         }
     });
 }
-
-
-loadData();
 
 function getPorts(b) {
     var dx = [];
@@ -260,7 +262,6 @@ function getPorts(b) {
     }
 
     //Check angles
-    var thing = 5;
     for(var i = 0; i < ports.length; i++){
         var x = ports[i].x + Math.cos(ports[i].angle / 180 * Math.PI) * 5;
         var y = ports[i].y + Math.sin(ports[i].angle / 180 * Math.PI) * 5;
@@ -291,39 +292,44 @@ function getVerts(b) {
     return(verts)
 }
 
-function drawBlock(b,x,y){
-    var offset_x = x;
-    var offset_y = y;
-    var zoom = 10.0;
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo((b.verts[b.verts.length-1].x + offset_x) * zoom,-(b.verts[b.verts.length-1].y - offset_y) * zoom);
-    ctx.font = "12px Arial";
-    for(var i = 0; i < b.verts.length; i++){
-        ctx.lineTo((b.verts[i].x + offset_x) * zoom,-(b.verts[i].y - offset_y) * zoom);
-        ctx.strokeText(i,(b.verts[i].x + offset_x) * zoom,-(b.verts[i].y - offset_y) * zoom);
+var mirror_shapes = [];
+function getMirrorShapes(){
+    for(var key in block_data){
+        if(block_data[key].shape !== undefined && block_data[key].shape.slice(-1) === "L"){
+            mirror_shapes.push(block_data[key].shape.slice(0,block_data[key].shape.length-1));
+        }
     }
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc((offset_x) * zoom, -(-offset_y) * zoom, 10, 0, 2 * Math.PI, false);
-    ctx.stroke();
-
-    for(var i = 0; i < b.ports.length; i++){
-        ctx.beginPath();
-        ctx.arc((b.ports[i].x + offset_x) * zoom, -(b.ports[i].y - offset_y) * zoom, 10, 0, 2 * Math.PI, false);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo((b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y) * zoom);
-        ctx.lineTo((b.ports[i].x + offset_x + 10 * Math.cos(b.ports[i].angle * Math.PI/180)) * zoom,-(b.ports[i].y - offset_y + 10 * Math.sin(b.ports[i].angle * Math.PI/180)) * zoom)
-        ctx.stroke();
-        ctx.strokeText(i,(b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y -1) * zoom);
-    }
-
-    console.log(b);
 }
+
+function findMirror(b) {
+    var shape_to_find = b.shape.slice(0,b.shape.length-1);
+    if(b.shape.slice(-1) === "L"){
+        shape_to_find += "R";
+    } else {
+        shape_to_find += "L";
+    }
+
+    for(var key in block_data){
+        if(block_data[key].shape !== undefined && block_data[key].shape === shape_to_find){
+            if(block_data[key].scale === b.scale && b.group === block_data[key].group && b.name === block_data[key].name && b.blurb === block_data[key].blurb && b.fillColor === block_data[key].fillColor && b.density === block_data[key].density){
+                return(block_data[key].ident)
+            }
+        }
+    }
+}
+
+function getMirrors() {
+    for(var key in block_data){
+        if(block_data[key].shape !== undefined && mirror_shapes.includes(block_data[key].shape.slice(0,block_data[key].shape.length-1))){
+            block_data[key].mirror = findMirror(block_data[key]);
+            //console.log(block_data[key].ident,block_data[key].ident === findMirror(block_data[block_data[key].mirror]))
+        }
+    }
+}
+
+loadData();
+getMirrorShapes();
+getMirrors();
 
 module.exports = {
     block_data: block_data,

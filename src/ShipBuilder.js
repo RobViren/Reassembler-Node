@@ -21,9 +21,9 @@ function Ship(name, faction){
 
 }
 
-function addBlock(faction, block_number, attachment_block_index,type){
+function addBlock(block_number, attachment_block_index,type){
 
-	var new_block = BS.getRandomBlockByType(faction,type);
+	var new_block = new BS.Block(block_number);
 	var ship_block_indexs = [];
 
 	//Non-repeating Random attachment point index checking
@@ -38,7 +38,7 @@ function addBlock(faction, block_number, attachment_block_index,type){
 		var new_block_indexs = [];
 
 		//More Thruster Nonsense
-		if(type == "Thrust"){
+		if(type == "thruster"){
 			fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
 			var res = checkBlocks(new_block,this.blocks);
 
@@ -47,7 +47,7 @@ function addBlock(faction, block_number, attachment_block_index,type){
 				return(true);
 			}
 
-			new_block = new BB.Block(faction,block_number,type);
+			new_block = new BS.Block(block_number);
 		}
 		else{
 			while(new_block_indexs.length < new_block.block_data.ports.length){
@@ -68,11 +68,10 @@ function addBlock(faction, block_number, attachment_block_index,type){
 					this.blocks.push(new_block);
 					return(true);
 				}
-				new_block = new BB.Block(faction,block_number,type);
+				new_block = new BS.Block(block_number);
 			}
 		}
 	}
-
 	return(false);
 }
 
@@ -264,17 +263,17 @@ function drawShip(ctx,x,y,zoom){
 	ctx.beginPath();
 	for(var i = 0; i < this.blocks.length; i++){
 
-		for(var j = 0; j < this.blocks[i].shape.x_bounds.length; ++j){
+		for(var j = 0; j < this.blocks[i].block_data.ports.length; ++j){
 
-			var length = this.blocks[i].shape.x_bounds.length;
+			var length = this.blocks[i].block_data.ports.length;
 			if(j == 0){
 
-				ctx.moveTo(this.blocks[i].shape.x_bounds[j] * zoom + x,this.blocks[i].shape.y_bounds[j] * zoom + y);
+				ctx.moveTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
 				ctx.lineTo(this.blocks[i].shape.x_bounds[length-1] * zoom + x,this.blocks[i].shape.y_bounds[length-1] * zoom + y);
-				ctx.moveTo(this.blocks[i].shape.x_bounds[j] * zoom + x,this.blocks[i].shape.y_bounds[j] * zoom + y);
+				ctx.moveTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
 			}
 			else if(j < length){
-				ctx.lineTo(this.blocks[i].shape.x_bounds[j] * zoom + x,this.blocks[i].shape.y_bounds[j] * zoom + y);
+				ctx.lineTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
 			}
 		}
 	}
@@ -285,8 +284,8 @@ function drawShip(ctx,x,y,zoom){
 function fitBlock(index1,index2, b1, b2){
 
 	//Rotate Block
-	var a1 = b1.shape.angle[index1];
-	var a2 = b2.shape.angle[index2];
+	var a1 = b1.block_data.ports[index1].angle;
+	var a2 = b2.block_data.ports[index2].angle;
 
     var target_angle = a2 + 180.0;
     //Normalize angle
@@ -295,29 +294,22 @@ function fitBlock(index1,index2, b1, b2){
 
     b1.rotate(target_angle - a1);
 
-	var a1 = b1.shape.angle[index1];
-	var a2 = b2.shape.angle[index2];
-	var new_angle = a1 - a2;
-
 	//Translate Block
-	var xdiff = b2.shape.x_attachments[index2] - b1.shape.x_attachments[index1];
-	var ydiff = b2.shape.y_attachments[index2] - b1.shape.y_attachments[index1];
+	var xdiff = b2.block_data.ports[index2].x - b1.block_data.ports[index1].x;
+	var ydiff = b2.block_data.ports[index2].y - b1.block_data.ports[index1].y;
 
 	b1.translate(xdiff,ydiff);
 	b1.roundBlock();
 }
 
-function pointInPolygon(x, y, cornersX, cornersY) {
+function pointInPolygon(x, y, verts) {
 
-    var i, j=cornersX.length-1 ;
+    var i, j=verts.length-1 ;
     var  oddNodes=false;
 
-    var polyX = cornersX;
-    var polyY = cornersY;
-
-    for (i=0; i<cornersX.length; i++) {
-        if ((polyY[i]< y && polyY[j]>=y ||  polyY[j]< y && polyY[i]>=y) &&  (polyX[i]<=x || polyX[j]<=x)) {
-          oddNodes^=(polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i])<x);
+    for (i=0; i<verts.length; i++) {
+        if ((verts[i].y< y && verts[j].y>=y ||  verts[j].y< y && verts[i].y>=y) &&  (verts[i].x<=x || verts[j].x<=x)) {
+          oddNodes^=(verts[i].x+(y-verts[i].y)/(verts[j].y-verts[i].y)*(verts[j].x-verts[i].x)<x);
         }
         j=i;
     }
@@ -355,26 +347,24 @@ function checkBlocks(b1,blocks){
 
 function collisionCheck(b1,b2){
 
-	if(Util.distance(b1.x,b1.y,b2.x,b2.y) < 25){
-
-		if(pointInPolygon(b1.x,b1.y,b2.shape.x_bounds,b2.shape.y_bounds)){
+	if(Util.distance(b1.x,b1.y,b2.x,b2.y) < 50){
+		if(pointInPolygon(b1.x,b1.y,b2.block_data.verts)){
 			return(true);
 		}
+		for(var j = 0; j < b1.block_data.verts.length; ++j){
 
-		for(var j = 0; j < b1.shape.x_bounds.length; ++j){
+			var x = (b1.block_data.verts[j].x - b1.x) * .999 + b1.x;
+			var y = (b1.block_data.verts[j].y - b1.y) * .999 + b1.y;
 
-			var x = (b1.shape.x_bounds[j] - b1.x) * .999 + b1.x;
-			var y = (b1.shape.y_bounds[j] - b1.y) * .999 + b1.y;
-
-			var res = pointInPolygon(x,y,b2.shape.x_bounds,b2.shape.y_bounds);
+			var res = pointInPolygon(x,y,b2.block_data.verts);
 			if(res == true){
 				return(true);
 			}
 
-			x = (b1.shape.x_bounds[j] - b1.x) * .5 + b1.x;
-			y = (b1.shape.y_bounds[j] - b1.y) * .5 + b1.y;
+			x = (b1.block_data.verts[j].x - b1.x) * .5 + b1.x;
+			y = (b1.block_data.verts[j].y - b1.y) * .5 + b1.y;
 
-			res = pointInPolygon(x,y,b2.shape.x_bounds,b2.shape.y_bounds);
+			res = pointInPolygon(x,y,b2.block_data.verts);
 			if(res == true){
 				return(true);
 			}
@@ -505,6 +495,19 @@ function buildShip(name, faction,target_hull_amount, target_thruster_points, tar
 	return(new_ship);
 }
 
+
+var s = new Ship("Doop",8);
+s.addBlock(801,0);
+s.addBlock(801,0);
+s.addBlock(801,0);
+s.addBlock(802,1);
+s.addBlock(803,2);
+s.addBlock(802,3);
+for(var i = 0; i < s.blocks.length; i++){
+	BS.drawBlock(s.blocks[i].block_data,50,50);
+}
+console.log(s);
+console.log(collisionCheck(s.blocks[0],s.blocks[1]))
 module.exports = {
 	buildShip: buildShip,
 	Ship: Ship
