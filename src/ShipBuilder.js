@@ -25,10 +25,10 @@ function addBlock(block_number, attachment_block_index){
 
 	var new_block = new BS.Block(block_number);
 	//Cannont attach a block to a thruster
-	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type == "thruster"){
+	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type === "thruster"){
 		return(false);
 	}
-	var new_block = new BS.Block(block_number);
+
 	var ship_block_indexs = [];
 
 	//Non-repeating Random attachment point index checking
@@ -43,7 +43,7 @@ function addBlock(block_number, attachment_block_index){
 		var new_block_indexs = [];
 
 		//More Thruster Nonsense
-		if(new_block.block_data.type == "thruster"){
+		if(new_block.block_data.type === "thruster"){
 			var res;
 			if(new_block.block_data.ports[0][2] === "THRUSTER_OUT"){
 				res = true;
@@ -85,13 +85,12 @@ function addBlock(block_number, attachment_block_index){
 	return(false);
 }
 
-function addBlockSymm(faction, block_number, attachment_block_index,type){
-	//Check block type for thruster things
-	if(type !== "thruster" && this.blocks[attachment_block_index].type == "thruster"){
+function addBlockSymm(block_number, attachment_block_index){
+	var new_block = new BS.Block(block_number);
+	//Cannont attach a block to a thruster
+	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type === "thruster"){
 		return(false);
 	}
-
-	var new_block = new BB.Block(faction,block_number,type);
 	var ship_block_indexs = [];
 
 	//Non-repeating Random attachment point index checking
@@ -106,16 +105,22 @@ function addBlockSymm(faction, block_number, attachment_block_index,type){
 		var new_block_indexs = [];
 
 		//More Thruster Nonsense
-		if(type == "thruster"){
+		if(new_block.block_data.type === "thruster"){
 			fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
 			var res = checkBlocksSymm(new_block,this.blocks);
 
-			if(res == false){
+			if(res === false){
 				this.blocks.push(new_block);
 
 				//Add mirror block
-				var mirror_block = new BB.Block(faction,new_block.block_data.block_mirror,type);
-				if(checkMirrorBlock(block_number)){
+				var mirror_block;
+				if(new_block.block_data.mirror !== undefined){
+					mirror_block = new BS.Block(new_block.block_data.mirror);
+				} else {
+					mirror_block = new BS.Block(block_number);
+				}
+
+				if(new_block.block_data.mirror !== undefined){
 					mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
 				}
 				else{
@@ -135,7 +140,7 @@ function addBlockSymm(faction, block_number, attachment_block_index,type){
 				return(true);
 			}
 
-			new_block = new BB.Block(faction,block_number,type);
+			new_block = new BS.Block(block_number);
 		}
 		else{
 			while(new_block_indexs.length < new_block.block_data.ports.length){
@@ -156,8 +161,14 @@ function addBlockSymm(faction, block_number, attachment_block_index,type){
 					this.blocks.push(new_block);
 
 					//Add mirror block
-					var mirror_block = new BB.Block(faction,new_block.block_data.block_mirror,type);
-					if(checkMirrorBlock(block_number)){
+					var mirror_block;
+					if(new_block.block_data.mirror !== undefined){
+						mirror_block = new BS.Block(new_block.block_data.mirror);
+					} else {
+						mirror_block = new BS.Block(block_number);
+					}
+
+					if(new_block.block_data.mirror !== undefined){
 						mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
 					}
 					else{
@@ -168,15 +179,15 @@ function addBlockSymm(faction, block_number, attachment_block_index,type){
 					mirror_block.roundBlock();
 					if(!checkBlocks(mirror_block,this.blocks)){
 						//remove all attachments for mirror block
-						for(var i = 0; i < mirror_block.block_data.ports.length; ++i){
-							mirror_block.removeAttachment(i);
+						while(mirror_block.block_data.ports.length > 0){
+							mirror_block.removeAttachment(0);
 						}
 						this.blocks.push(mirror_block);
 					}
 
 					return(true);
 				}
-				new_block = new BB.Block(faction,block_number,type);
+				new_block = new BS.Block(block_number);
 			}
 		}
 	}
@@ -334,10 +345,11 @@ function pointInPolygon(x, y, verts) {
 
 function checkBlocksSymm(b1,blocks){
 
+	if(b1.y < 0.0){
+		return(true);
+	}
+	
 	for(var i = 0; i < blocks.length; i++){
-		if(b1.y <= 0.0){
-			return(true);
-		}
 		if(collisionCheck(b1,blocks[i]) || collisionCheck(blocks[i],b1)){
 			return(true);
 		}
@@ -383,14 +395,6 @@ function collisionCheck(b1,b2){
 	return(false);
 }
 
-function checkMirrorBlock(block_number){
-	for(var i = 0; i < Data.block_mirror_number.length; ++i){
-		if(block_number == Data.block_mirror_number[i]){
-			return(true);
-		}
-	}
-	return(false);
-}
 //Ship Building Code Wah Wah wahhhhh
 function buildShip(name, faction,target_hull_amount, target_thruster_points, target_module_points, block_limit, ship_symmetry){
 	//Prevent infinite runtime
@@ -507,17 +511,10 @@ function buildShip(name, faction,target_hull_amount, target_thruster_points, tar
 
 
 var s = new Ship("Doop",8);
-s.addBlock(803,0);
-s.addBlock(802,0);
-s.addBlock(803,1);
-s.addBlock(803,2);
 
 for(var i = 0; i < s.blocks.length; i++){
 	BS.drawBlock(s.blocks[i].block_data,50,50);
 }
-console.log(s);
-console.log(collisionCheck(s.blocks[0],s.blocks[1]))
-console.log(s.blocks)
 module.exports = {
 	buildShip: buildShip,
 	Ship: Ship
