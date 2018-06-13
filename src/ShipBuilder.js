@@ -21,8 +21,13 @@ function Ship(name, faction){
 
 }
 
-function addBlock(block_number, attachment_block_index,type){
+function addBlock(block_number, attachment_block_index){
 
+	var new_block = new BS.Block(block_number);
+	//Cannont attach a block to a thruster
+	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type == "thruster"){
+		return(false);
+	}
 	var new_block = new BS.Block(block_number);
 	var ship_block_indexs = [];
 
@@ -38,10 +43,15 @@ function addBlock(block_number, attachment_block_index,type){
 		var new_block_indexs = [];
 
 		//More Thruster Nonsense
-		if(type == "thruster"){
-			fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
-			var res = checkBlocks(new_block,this.blocks);
-
+		if(new_block.block_data.type == "thruster"){
+			var res;
+			if(new_block.block_data.ports[0][2] === "THRUSTER_OUT"){
+				res = true;
+			} else {
+				fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+				res = checkBlocks(new_block,this.blocks);
+			}
+			
 			if(res == false){
 				this.blocks.push(new_block);
 				return(true);
@@ -77,7 +87,7 @@ function addBlock(block_number, attachment_block_index,type){
 
 function addBlockSymm(faction, block_number, attachment_block_index,type){
 	//Check block type for thruster things
-	if(type != "Thrust" && this.blocks[attachment_block_index].type == "Thrust"){
+	if(type !== "thruster" && this.blocks[attachment_block_index].type == "thruster"){
 		return(false);
 	}
 
@@ -96,7 +106,7 @@ function addBlockSymm(faction, block_number, attachment_block_index,type){
 		var new_block_indexs = [];
 
 		//More Thruster Nonsense
-		if(type == "Thrust"){
+		if(type == "thruster"){
 			fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
 			var res = checkBlocksSymm(new_block,this.blocks);
 
@@ -497,17 +507,17 @@ function buildShip(name, faction,target_hull_amount, target_thruster_points, tar
 
 
 var s = new Ship("Doop",8);
-s.addBlock(801,0);
-s.addBlock(801,0);
-s.addBlock(801,0);
-s.addBlock(802,1);
+s.addBlock(803,0);
+s.addBlock(802,0);
+s.addBlock(803,1);
 s.addBlock(803,2);
-s.addBlock(802,3);
+
 for(var i = 0; i < s.blocks.length; i++){
 	BS.drawBlock(s.blocks[i].block_data,50,50);
 }
 console.log(s);
 console.log(collisionCheck(s.blocks[0],s.blocks[1]))
+console.log(s.blocks)
 module.exports = {
 	buildShip: buildShip,
 	Ship: Ship
