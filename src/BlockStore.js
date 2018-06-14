@@ -5,7 +5,7 @@ var Util = require('./Util');
 function Block(block_number){
 	this.x = 0.0;
 	this.y = 0.0;
-	this.angle = 0.0;
+    this.angle = 0.0;
 	this.block_data = Util.copyObject(BD.block_data[block_number]);
 
 	//Functions
@@ -143,7 +143,7 @@ function getBlock(id){
 function drawBlock(b,x,y){
     var offset_x = x;
     var offset_y = y;
-    var zoom = 10.0;
+    var zoom = 5;
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
     ctx.beginPath();
@@ -156,17 +156,13 @@ function drawBlock(b,x,y){
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc((offset_x) * zoom, -(-offset_y) * zoom, 10, 0, 2 * Math.PI, false);
+    ctx.arc((offset_x) * zoom, -(-offset_y) * zoom, 2, 0, 2 * Math.PI, false);
     ctx.stroke();
 
     for(var i = 0; i < b.ports.length; i++){
         ctx.beginPath();
-        ctx.arc((b.ports[i].x + offset_x) * zoom, -(b.ports[i].y - offset_y) * zoom, 10, 0, 2 * Math.PI, false);
-        ctx.stroke();
-
-        ctx.beginPath();
         ctx.moveTo((b.ports[i].x + offset_x) * zoom,-(b.ports[i].y - offset_y) * zoom);
-        ctx.lineTo((b.ports[i].x + offset_x + 10 * Math.cos(b.ports[i].angle * Math.PI/180)) * zoom,-(b.ports[i].y - offset_y + 10 * Math.sin(b.ports[i].angle * Math.PI/180)) * zoom)
+        ctx.lineTo((b.ports[i].x + offset_x + 5 * Math.cos(b.ports[i].angle * Math.PI/180)) * zoom,-(b.ports[i].y - offset_y + 5 * Math.sin(b.ports[i].angle * Math.PI/180)) * zoom)
         ctx.strokeStyle = '#ff0000';
         ctx.stroke();
         ctx.strokeStyle = '#000000';
@@ -178,5 +174,6 @@ module.exports = {
   Block: Block,
   getRandomBlockByType,
   getBlock: getBlock,
-  drawBlock: drawBlock
+  drawBlock: drawBlock,
+  faction_blocks: BD.faction_blocks
 };

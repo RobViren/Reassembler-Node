@@ -120,7 +120,7 @@ function addBlockSymm(block_number, attachment_block_index){
 					mirror_block = new BS.Block(block_number);
 				}
 
-				if(new_block.block_data.mirror !== undefined){
+				if(new_block.block_data.mirror === undefined){
 					mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
 				}
 				else{
@@ -168,7 +168,7 @@ function addBlockSymm(block_number, attachment_block_index){
 						mirror_block = new BS.Block(block_number);
 					}
 
-					if(new_block.block_data.mirror !== undefined){
+					if(new_block.block_data.mirror === undefined){
 						mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
 					}
 					else{
@@ -195,30 +195,8 @@ function addBlockSymm(block_number, attachment_block_index){
 }
 
 function addBlockType(type,symm){
-	//select correct indexs
-	var indexs;
-	if(type == "Hull"){
-		indexs = Data.hull_indexs;
-	}
-	else if(type == "Thrust"){
-		indexs = Data.thurst_indexs;
-	}
-	else if(type == "Module"){
-		indexs = Data.module_indexs;
-	}
 
-	//get random hull block that passes selection weight
-	var weight_check = Util.getRandomInt(0,1000);
-	var random_new_block_index = Util.getRandomInt(0,indexs[this.faction].length);
-	var key = indexs[this.faction][random_new_block_index];
-	var random_new_block_weight = Data.block_data[this.faction][type][key].block_selection_weight;
-
-	while(weight_check >= random_new_block_weight){
-		weight_check = Util.getRandomInt(0,1000);
-		random_new_block_index = Util.getRandomInt(0,indexs[this.faction].length);
-		key = indexs[this.faction][random_new_block_index];
-		random_new_block_weight = Data.block_data[this.faction][type][key].block_selection_weight;
-	}
+	var block_number = BS.faction_blocks[this.faction][type][Util.getRandomInt(0,BS.faction_blocks[this.faction][type].length)]
 
 	var attempted_blocks = [];
 	while(attempted_blocks.length < this.blocks.length){
@@ -226,16 +204,17 @@ function addBlockType(type,symm){
 		while(Util.doesRepeat(random_index,attempted_blocks)){
 			random_index = Util.getRandomInt(0, this.blocks.length);
 		}
-		if(symm == 0){
-			if(this.addBlock(this.faction,key,random_index,type)){
+		if(symm === 0){
+			if(this.addBlock(block_number,random_index)){
 				return(true);
 			}
 		}
-		else{
-			if(this.addBlockSymm(this.faction,key,random_index,type)){
+		else {
+			if(this.addBlockSymm(block_number,random_index)){
 				return(true);
 			}
 		}
+		attempted_blocks.push(random_index);
 	}
 }
 
@@ -369,7 +348,7 @@ function checkBlocks(b1,blocks){
 
 function collisionCheck(b1,b2){
 
-	if(Util.distance(b1.x,b1.y,b2.x,b2.y) < 50){
+	if(Util.distance(b1.x,b1.y,b2.x,b2.y) < 200){
 		if(pointInPolygon(b1.x,b1.y,b2.block_data.verts)){
 			return(true);
 		}
@@ -511,6 +490,12 @@ function buildShip(name, faction,target_hull_amount, target_thruster_points, tar
 
 
 var s = new Ship("Doop",8);
+for(var i = 0; i < 100; i++){
+	s.addBlockType("hull",0);
+}
+for(var i = 0; i < 100; i++){
+	s.addBlockType("thruster",0);
+}
 
 for(var i = 0; i < s.blocks.length; i++){
 	BS.drawBlock(s.blocks[i].block_data,50,50);
@@ -519,3 +504,5 @@ module.exports = {
 	buildShip: buildShip,
 	Ship: Ship
 };
+
+//TODO Fix mirror triangle issue where a symmetrical center triangle causes floating blocks

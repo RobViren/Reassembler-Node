@@ -27,8 +27,7 @@ function distance(x1,y1,x2,y2){
 
 //I fucnking hate default pass by refernce objects you fucks
 function copyObject(original){
-	var copy = JSON.parse(JSON.stringify(original));
-	return(copy);
+	return(JSON.parse(JSON.stringify(original)));
 }
 
 
