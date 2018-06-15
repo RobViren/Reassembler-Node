@@ -327,9 +327,20 @@ function getMirrors() {
     }
 }
 
+function purgeOtherPorts() {
+    for(var key in block_data){
+        for(var i = 0; i < block_data[key].ports.length; i++){
+            if(block_data[key].ports[i].type !== undefined && !block_data[key].ports[i].type.includes("THRUSTER")){
+                block_data[key].ports.splice(i,1);
+            }
+        }
+    }
+}
+
 loadData();
 getMirrorShapes();
 getMirrors();
+purgeOtherPorts();
 
 fs.writeFile('./src/json/block_data.json', JSON.stringify(block_data), 'utf-8', function(err) {
 	if (err) throw err

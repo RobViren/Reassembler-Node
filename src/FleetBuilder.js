@@ -49,7 +49,7 @@ function buildFleet(name,faction,total_value, min_ship_value, max_ship_value, bl
 function drawFleet(context,x,y,scale){
   context.clearRect(0, 0, 2000, 2000);
 	for(var k = 0; k < this.ships.length; ++k){
-        this.ships[k].drawShip(context,x, y + 200 * k * scale, scale);
+        this.ships[k].drawShip(context,x, y + 300 * k * scale, scale);
 	}
 }
 
