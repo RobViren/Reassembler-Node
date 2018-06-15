@@ -140,12 +140,11 @@ function getBlock(id){
     }
 }
 
-function drawBlock(b,x,y){
+function drawBlock(ctx,x,y,z){
     var offset_x = x;
     var offset_y = y;
-    var zoom = 5;
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
+    var zoom = z;
+
     ctx.beginPath();
     ctx.moveTo((b.verts[b.verts.length-1].x + offset_x) * zoom,-(b.verts[b.verts.length-1].y - offset_y) * zoom);
     ctx.font = "12px Arial";

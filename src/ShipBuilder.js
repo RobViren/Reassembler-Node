@@ -273,27 +273,27 @@ function getModulePoints(){
 }
 
 function drawShip(ctx,x,y,zoom){
+
 	ctx.font = "12px Arial";
 	ctx.fillText(this.blocks.length.toString(),this.blocks[this.blocks.length-1].x * zoom + x,this.blocks[this.blocks.length-1].y * zoom + y);
 
 	ctx.beginPath();
 	for(var i = 0; i < this.blocks.length; i++){
 
-		for(var j = 0; j < this.blocks[i].block_data.ports.length; ++j){
+		for(var j = 0; j < this.blocks[i].block_data.verts.length; ++j){
 
-			var length = this.blocks[i].block_data.ports.length;
+			var length = this.blocks[i].block_data.verts.length;
 			if(j == 0){
-
-				ctx.moveTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
-				ctx.lineTo(this.blocks[i].shape.x_bounds[length-1] * zoom + x,this.blocks[i].shape.y_bounds[length-1] * zoom + y);
-				ctx.moveTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
+				ctx.moveTo(this.blocks[i].block_data.verts[j].x * zoom + x,this.blocks[i].block_data.verts[j].y * zoom + y);
+				ctx.lineTo(this.blocks[i].block_data.verts[length-1].x * zoom + x,this.blocks[i].block_data.verts[length -1].y * zoom + y);
+				ctx.moveTo(this.blocks[i].block_data.verts[j].x * zoom + x,this.blocks[i].block_data.verts[j].y * zoom + y);
 			}
 			else if(j < length){
-				ctx.lineTo(this.blocks[i].block_data.ports[j].x * zoom + x,this.blocks[i].block_data.ports[j].y * zoom + y);
+				ctx.lineTo(this.blocks[i].block_data.verts[j].x * zoom + x,this.blocks[i].block_data.verts[j].y * zoom + y);
 			}
 		}
 	}
-	ctx.stroke();
+ctx.stroke();
 }
 
 //Block fitting functions
@@ -408,9 +408,11 @@ function collisionCheck(b1,b2){
 
 //Ship Building Code Wah Wah wahhhhh
 function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
+	if(weights === undefined){
+		weights = makeWeights(faction,100);
+	}
 	//Prevent infinite runtime
 	var MAX_ATTEMPTS = 200;
-
 	//Check symm
 	if(ship_symmetry == 2){
 		ship_symmetry = Util.getRandomInt(0,2);
@@ -437,37 +439,38 @@ function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 		} else {
 			new_ship.addBlockType(next,ship_symmetry);
 		}
+		//TODO
 		if(new_ship.getShipValue() > target_ship_value){
-			ship_value_reached = true;
+			if(ship_symmetry === 0){
+				new_ship.blocks.pop();
+				new_ship.addBlockType("thruster",ship_symmetry);
+			} else{
+				new_ship.blocks.pop();
+				new_ship.blocks.pop();
+				new_ship.addBlockType("thruster",ship_symmetry);
+			}
+			if(new_ship.getShipValue() > target_ship_value * .8){
+				ship_value_reached = true;
+			}
 		}
-	}
-	if(ship_symmetry === 0){
-		new_ship.blocks.pop();
-	} else{
-		new_ship.blocks.pop();
-		new_ship.blocks.pop();
 	}
 	return(new_ship);
 }
 
-document.getElementById("doit").addEventListener("click",(e) => {
-	var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-	var s = buildShip("woop",8,1,1000,weights);
-	for(var i = 0; i < s.blocks.length; i++){
-		BS.drawBlock(s.blocks[i].block_data,50,50);
+function makeWeights(faction,length){
+	var weights = [];
+	var types = ["thruster","weapon","hull","shield","generator","other"];
+	for(var i = 0; i < length; i++){
+		var next = types[Util.getRandomInt(0,5)];
+		if(BS.faction_blocks[faction][next].length > 0){
+			weights.push(BS.faction_blocks[faction][next][Util.getRandomInt(0,BS.faction_blocks[faction][next].length)]);
+		} else {
+			i--;
+		}
 	}
-});
 
-var weights = [];
-weights.push("thruster");
-weights.push("weapon");
-weights.push("weapon");
-weights.push("weapon");
-weights.push("hull");
-weights.push("hull");
-weights.push("hull");
+	return(weights);
+}
 
 module.exports = {
 	buildShip: buildShip,
