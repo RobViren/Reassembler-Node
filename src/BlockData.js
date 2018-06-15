@@ -331,6 +331,15 @@ loadData();
 getMirrorShapes();
 getMirrors();
 
+fs.writeFile('./src/json/block_data.json', JSON.stringify(block_data), 'utf-8', function(err) {
+	if (err) throw err
+	console.log('File Saved')
+});
+fs.writeFile('./src/json/faction_blocks.json', JSON.stringify(faction_blocks), 'utf-8', function(err) {
+	if (err) throw err
+	console.log('File Saved')
+});
+
 module.exports = {
     block_data: block_data,
     faction_blocks: faction_blocks

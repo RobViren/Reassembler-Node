@@ -68,15 +68,17 @@ function addBlock(block_number, attachment_block_index){
 				}
 				new_block_indexs.push(new_index);
 
-				fitBlock(new_index, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+				if(new_block.block_data.ports[new_index].type === undefined && this.blocks[attachment_block_index].block_data.ports[ship_attachment_index].type ===undefined){
+					fitBlock(new_index, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+					
+					var res = checkBlocks(new_block,this.blocks);
 
-				var res = checkBlocks(new_block,this.blocks);
-
-				if(res == false){
-					new_block.removeAttachment(new_index);
-					this.blocks[attachment_block_index].removeAttachment(ship_attachment_index);
-					this.blocks.push(new_block);
-					return(true);
+					if(res == false){
+						new_block.removeAttachment(new_index);
+						this.blocks[attachment_block_index].removeAttachment(ship_attachment_index);
+						this.blocks.push(new_block);
+						return(true);
+					}
 				}
 				new_block = new BS.Block(block_number);
 			}
@@ -121,10 +123,15 @@ function addBlockSymm(block_number, attachment_block_index){
 				}
 
 				if(new_block.block_data.mirror === undefined){
-					mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
+					var mirror_angle = new_block.angle;
+					mirror_angle *= 180.0/ Math.PI;
+					while(mirror_angle < 0.0){mirror_angle+= 360.0;}
+					while(mirror_angle >= 360.0){ mirror_angle -= 360.0;}
+					mirror_angle *= -1;
+					mirror_block.rotate(mirror_angle);
 				}
 				else{
-				mirror_block.rotate(new_block.angle*-180.0/Math.PI);
+					mirror_block.rotate(new_block.angle*-180.0/Math.PI);
 				}
 
 				mirror_block.translate(new_block.x, -new_block.y);
@@ -151,41 +158,48 @@ function addBlockSymm(block_number, attachment_block_index){
 				}
 				new_block_indexs.push(new_index);
 
-				fitBlock(new_index, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+				if(new_block.block_data.ports[new_index].type === undefined && this.blocks[attachment_block_index].block_data.ports[ship_attachment_index].type ===undefined){
+					fitBlock(new_index, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
 
-				var res = checkBlocksSymm(new_block,this.blocks);
+					var res = checkBlocksSymm(new_block,this.blocks);
 
-				if(res == false){
-					new_block.removeAttachment(new_index);
-					this.blocks[attachment_block_index].removeAttachment(ship_attachment_index);
-					this.blocks.push(new_block);
+					if(res == false){
+						new_block.removeAttachment(new_index);
+						this.blocks[attachment_block_index].removeAttachment(ship_attachment_index);
+						this.blocks.push(new_block);
 
-					//Add mirror block
-					var mirror_block;
-					if(new_block.block_data.mirror !== undefined){
-						mirror_block = new BS.Block(new_block.block_data.mirror);
-					} else {
-						mirror_block = new BS.Block(block_number);
-					}
-
-					if(new_block.block_data.mirror === undefined){
-						mirror_block.rotate(new_block.angle*-180.0/Math.PI - 90);
-					}
-					else{
-					mirror_block.rotate(new_block.angle*-180.0/Math.PI);
-					}
-
-					mirror_block.translate(new_block.x, -new_block.y);
-					mirror_block.roundBlock();
-					if(!checkBlocks(mirror_block,this.blocks)){
-						//remove all attachments for mirror block
-						while(mirror_block.block_data.ports.length > 0){
-							mirror_block.removeAttachment(0);
+						//Add mirror block
+						var mirror_block;
+						if(new_block.block_data.mirror !== undefined){
+							mirror_block = new BS.Block(new_block.block_data.mirror);
+						} else {
+							mirror_block = new BS.Block(block_number);
 						}
-						this.blocks.push(mirror_block);
-					}
 
-					return(true);
+						if(new_block.block_data.mirror === undefined){
+							var mirror_angle = new_block.angle;
+							mirror_angle *= 180.0/ Math.PI;
+							while(mirror_angle < 0.0){mirror_angle+= 360.0;}
+							while(mirror_angle >= 360.0){ mirror_angle -= 360.0;}
+							mirror_angle *= -1;
+							mirror_block.rotate(mirror_angle);
+						}
+						else{
+							mirror_block.rotate(new_block.angle*-180.0/Math.PI);
+						}
+
+						mirror_block.translate(new_block.x, -new_block.y);
+						mirror_block.roundBlock();
+						if(!checkBlocks(mirror_block,this.blocks)){
+							//remove all attachments for mirror block
+							while(mirror_block.block_data.ports.length > 0){
+								mirror_block.removeAttachment(0);
+							}
+							this.blocks.push(mirror_block);
+						}
+
+						return(true);
+					}
 				}
 				new_block = new BS.Block(block_number);
 			}
@@ -220,8 +234,10 @@ function addBlockType(type,symm){
 
 function getShipValue(){
 	var total_value = 0;
-	for(var i =0; i < this.blocks.length; ++i){
-		total_value += parseInt(this.blocks[i].block_data.block_points);
+	for(var i =0; i < this.blocks.length; i++){
+		if(this.blocks[i].block_data.points !== undefined){
+			total_value += this.blocks[i].block_data.points;
+		}
 	}
 	return(total_value);
 }
@@ -229,7 +245,7 @@ function getShipValue(){
 function getHullCount(){
 	var count = 0;
 	for(var i =0; i < this.blocks.length; ++i){
-		if(this.blocks[i].type == "Hull"){
+		if(this.blocks[i].block_data.type === "hull"){
 			count ++;
 		}
 	}
@@ -238,9 +254,9 @@ function getHullCount(){
 
 function getThrustPoints(){
 	var points = 0;
-	for(var i =0; i < this.blocks.length; ++i){
-		if(this.blocks[i].type == "Thrust"){
-			points += parseInt(this.blocks[i].block_data.block_points);
+	for(var i = 0; i < this.blocks.length; ++i){
+		if(this.blocks[i].type === "thruster"){
+			points += parseInt(this.blocks[i].block_data.points);
 		}
 	}
 	return(points);
@@ -249,8 +265,8 @@ function getThrustPoints(){
 function getModulePoints(){
 	var points = 0;
 	for(var i =0; i < this.blocks.length; ++i){
-		if(this.blocks[i].type == "Module" || this.blocks[i].type == "Command"){
-			points += parseInt(this.blocks[i].block_data.block_points);
+		if(this.blocks[i].type == "other" || this.blocks[i].type == "shield" || this.blocks[i].type == "generator"){
+			points += parseInt(this.blocks[i].block_data.points);
 		}
 	}
 	return(points);
@@ -327,6 +343,22 @@ function checkBlocksSymm(b1,blocks){
 	if(b1.y < 0.0){
 		return(true);
 	}
+	var vert_above = false;
+	var vert_below = false;
+	for(var i = 0; i < b1.block_data.verts.length; i++){
+		if(b1.block_data.verts[i].y <= 0){
+			vert_above = true;
+		}
+		if (b1.block_data.verts[i].y > 5){
+			vert_below = true;
+		}
+		if(b1.block_data.verts[i].y < -5){
+			return(true);
+		}
+		if(vert_above && vert_below){
+			return(true);
+		}
+	}
 	
 	for(var i = 0; i < blocks.length; i++){
 		if(collisionCheck(b1,blocks[i]) || collisionCheck(blocks[i],b1)){
@@ -375,7 +407,7 @@ function collisionCheck(b1,b2){
 }
 
 //Ship Building Code Wah Wah wahhhhh
-function buildShip(name, faction,target_hull_amount, target_thruster_points, target_module_points, block_limit, ship_symmetry){
+function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 	//Prevent infinite runtime
 	var MAX_ATTEMPTS = 200;
 
@@ -386,120 +418,57 @@ function buildShip(name, faction,target_hull_amount, target_thruster_points, tar
 
 	//New ship declaration
 	var new_ship = new Ship(name, faction);
-	var enough_hull = false;
-	var enough_thrusters = false;
-	var enough_modules = false;
 	var loop_counter = 0;
-
-	while(!enough_hull || !enough_thrusters || !enough_modules ){
+	var ship_value_reached = false;
+	while(!ship_value_reached){
 		if(loop_counter > MAX_ATTEMPTS){
 			console.log("MAX_ATTEMPTS reached");
 			return(new_ship);
 		}
 
 		loop_counter++;
-		var next_funct = Util.getRandomInt(0,3);
-
-		switch(next_funct){
-			case 0:
-				if(!enough_hull){
-					if(ship_symmetry == 0){
-						if(new_ship.addBlockType("Hull",0)){
-							loop_counter = 0;
-						}
-					}
-					else{
-						if(new_ship.addBlockType("Hull",1)){
-							loop_counter = 0;
-						}
-					}
-
-					//check for condition
-					if(new_ship.getHullCount() >= target_hull_amount){
-						enough_hull = true;
-						if(ship_symmetry == 0){
-							new_ship.blocks.pop();
-						}
-						else{
-							new_ship.blocks.pop();
-							new_ship.blocks.pop();
-						}
-					}
-				}
-				break;
-			case 1:
-				if(!enough_thrusters && loop_counter > 100){
-					if(ship_symmetry == 0){
-						if(new_ship.addBlockType("Thrust",0)){
-							loop_counter = 0;
-						}
-					}
-					else{
-						if(new_ship.addBlockType("Thrust",1)){
-							loop_counter = 0;
-						}
-					}
-					//check for condition
-					if(new_ship.getThrustPoints() >= target_thruster_points){
-						enough_thrusters = true;
-						if(ship_symmetry == 0){
-							new_ship.blocks.pop();
-						}
-						else{
-							new_ship.blocks.pop();
-							new_ship.blocks.pop();
-						}
-					}
-				}
-				break;
-			case 2:
-				if(!enough_modules){
-					if(ship_symmetry == 0){
-						if(new_ship.addBlockType("Module",0)){
-							loop_counter = 0;
-						}
-					}
-					else{
-						if(new_ship.addBlockType("Module",1)){
-							loop_counter = 0;
-						}
-					}
-					//check for condition
-					if(new_ship.getModulePoints() >= target_module_points){
-						enough_modules = true;
-						if(ship_symmetry == 0){
-							new_ship.blocks.pop();
-						}
-						else{
-							new_ship.blocks.pop();
-							new_ship.blocks.pop();
-						}
-					}
-				}
-				break;
+		var next = weights[Util.getRandomInt(0,weights.length)];
+		if(Number.isInteger(next)){
+			if(ship_symmetry === 0){
+				new_ship.addBlock(next,Util.getRandomInt(0,new_ship.blocks.length));
+			} else {
+				new_ship.addBlockSymm(next,Util.getRandomInt(0,new_ship.blocks.length));
+			}
+		} else {
+			new_ship.addBlockType(next,ship_symmetry);
 		}
-
-		if(block_limit <= new_ship.blocks.length){
-			new_ship.blocks.pop;
-			return(new_ship);
+		if(new_ship.getShipValue() > target_ship_value){
+			ship_value_reached = true;
 		}
 	}
-
+	if(ship_symmetry === 0){
+		new_ship.blocks.pop();
+	} else{
+		new_ship.blocks.pop();
+		new_ship.blocks.pop();
+	}
 	return(new_ship);
 }
 
+document.getElementById("doit").addEventListener("click",(e) => {
+	var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+	var s = buildShip("woop",8,1,1000,weights);
+	for(var i = 0; i < s.blocks.length; i++){
+		BS.drawBlock(s.blocks[i].block_data,50,50);
+	}
+});
 
-var s = new Ship("Doop",8);
-for(var i = 0; i < 100; i++){
-	s.addBlockType("hull",0);
-}
-for(var i = 0; i < 100; i++){
-	s.addBlockType("thruster",0);
-}
+var weights = [];
+weights.push("thruster");
+weights.push("weapon");
+weights.push("weapon");
+weights.push("weapon");
+weights.push("hull");
+weights.push("hull");
+weights.push("hull");
 
-for(var i = 0; i < s.blocks.length; i++){
-	BS.drawBlock(s.blocks[i].block_data,50,50);
-}
 module.exports = {
 	buildShip: buildShip,
 	Ship: Ship
