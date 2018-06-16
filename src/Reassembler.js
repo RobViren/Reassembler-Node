@@ -1,5 +1,5 @@
+require("./BattleManager");
 var FB = require("./FleetBuilder");
-
 var f;
 
 document.getElementById("doit").addEventListener("click",(e) => {
@@ -7,9 +7,9 @@ document.getElementById("doit").addEventListener("click",(e) => {
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    f = FB.buildFleet("doop",12,10000,200,10000,1000,2);
+    f = FB.buildFleet("doop",8,10000,200,10000,1000,2);
     
-    console.log(f.getTotalValue());
+    console.log(f.saveFleet("./doop.lua"));
 });
 
 //Drawing
