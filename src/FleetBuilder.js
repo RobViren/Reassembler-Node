@@ -23,29 +23,44 @@ function getTotalValue(){
 	return(value);
 }
 
-function buildFleet(name,faction,total_value, min_ship_value, max_ship_value, block_limit, symmetry){
+function buildFleet(name,faction,total_value, min_ship_value, max_ship_value, symmetry){
 	var new_fleet = new Fleet(name,faction);
-
-	var loop_counter = 0;
+  return new Promise((resolve,reject) => {
+    var loop_counter = 0;
 
     while(new_fleet.getTotalValue() < total_value){
+      ship_value = Util.getRandomInt(min_ship_value,max_ship_value);
+      new_fleet.addShip(name + "_" + loop_counter, faction, symmetry, ship_value);
+      loop_counter++;
+    }
+    //Remove ship that put it over
+    new_fleet.ships.pop();
 
-		ship_value = Util.getRandomInt(min_ship_value,max_ship_value);
+    //Add new ship that is the perfect value
+    var remainder = total_value - new_fleet.getTotalValue();
+    ship_value = remainder;
+    if(min_ship_value < remainder){
+      new_fleet.addShip(name + "_" + "remainder",faction, symmetry, ship_value);
+    }
 
-		new_fleet.addShip(name + "_" + loop_counter, faction, symmetry, ship_value);
-		loop_counter++;
-	}
-  //Remove ship that put it over
-  new_fleet.ships.pop();
+    resolve(new_fleet);
+  });
+}
 
-  //Add new ship that is the perfect value
-  var remainder = total_value - new_fleet.getTotalValue();
-  ship_value = remainder;
-  if(min_ship_value < remainder){
-    new_fleet.addShip(name + "_" + "remainder",faction, symmetry, ship_value);
-  }
+function groupBuildFleet(name,faction,total_value, min_ship_value, max_ship_value, symmetry, quantity){
+  return new Promise((resolve, reject) => {
+    var promise = [];
+    for(var i = 0; i < quantity; i++){
+      promise.push(buildFleet("F" + i,faction,total_value,min_ship_value,max_ship_value,symmetry));
+    };
 
-	return(new_fleet);
+    Promise.all(promise).then(res => {
+      for(var i = 0; i < res.length; i++){
+        res[i].saveFleet("./ships/" + res[i].name + ".lua");
+      }
+      resolve(res);
+    });
+  });
 }
 
 function drawFleet(context,x,y,scale){
@@ -93,7 +108,7 @@ function saveFleet(path){
     fleet_str = fleet_str.substring(0, fleet_str.length - 2);
     fleet_str += "}}";
 
-    fs.writeFile('./ship.lua', fleet_str, 'utf-8', function(err) {
+    fs.writeFile(path, fleet_str, 'utf-8', function(err) {
         if (err) throw err
         console.log('File Saved')
     });
@@ -105,5 +120,6 @@ module.exports = {
   drawFleet: drawFleet,
   addShip: addShip,
   getTotalValue: getTotalValue,
-  buildFleet: buildFleet
+  buildFleet: buildFleet,
+  groupBuildFleet: groupBuildFleet
 };

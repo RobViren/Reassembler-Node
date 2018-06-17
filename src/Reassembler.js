@@ -1,16 +1,16 @@
-require("./BattleManager");
+var BM = require("./BattleManager");
 var FB = require("./FleetBuilder");
-var f;
+var os = require('os');
 
-document.getElementById("doit").addEventListener("click",(e) => {
-	var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    f = FB.buildFleet("doop",8,10000,200,10000,1000,2);
-    
-    console.log(f.saveFleet("./doop.lua"));
-});
+var NUM_THREADS = os.cpus().length;
+var stop = false;
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+var scale = .5;
+var originx = 250;
+var originy = 250;
+var best_fleet;
+var max_score = 0;
 
 //Drawing
 window.addEventListener('keydown',check,false);
@@ -29,19 +29,16 @@ function check(e) {
     		break;
     	case 'd':
     		originx -= magnitude;
-    		break;
+            break;
+        case 'q':
+            stop = true;
+            break;
     }
 }
 
-var canvas = document.getElementById("canvas");
-var context = canvas.getContext("2d");
-var scale = .5;
-var originx = 250;
-var originy = 250;
-
 setInterval(function () {
-    if(f !== undefined){
-        f.drawFleet(context,originx,originy,scale);
+    if(best_fleet !== undefined){
+        best_fleet.drawFleet(context,originx,originy,scale);
     }
 },100);
 
@@ -61,4 +58,28 @@ function onWheel (event){
     	scale /= .9;
     }
     console.log(scale);
+};
+
+function bruteForceFleetBeater(path,faction,total_value, min_ship_value, max_ship_value, symmetry){
+    FB.groupBuildFleet("F",faction,total_value,min_ship_value,max_ship_value,symmetry,NUM_THREADS).then(res => {
+        BM.battleGroup(path,res).then(results => {
+            var winner = false;
+            for(var i = 0; i < results.length; i++){
+                if(results[i].score > max_score){
+                    best_fleet = res[i];
+                    max_score = results[i].score;
+                }
+                if(results[i].winner === 1){
+                    console.log("Winner is " + res[i].name);
+                    winner = true;
+                }
+            }
+            console.log("Leader is " + best_fleet.name + " with  a score of " + max_score);
+            if(!winner) {
+                bruteForceFleetBeater(path,faction,total_value, min_ship_value, max_ship_value, symmetry);
+            }
+        });
+    });
 }
+
+bruteForceFleetBeater("C:/Users/compy/Desktop/dev/node/Reassembler-Node/ships/ship.lua",8,14692,100,14692,1);
