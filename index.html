@@ -7,7 +7,7 @@
   </head>
   <body>
     <div class="columns">
-      <div class="column is-4">
+      <div class="column is-4" id="options">
         <div class="box">
           <div class="content">
             <h1>The Reassembler Program!</h1>
@@ -40,12 +40,12 @@
               <input class="input" type="number" placeholder="100" id="min_ship_value">
             </div>
           </div>
-          <div class="field">
+          <!-- <div class="field">
             <label class="label">Maximum Number of Blocks</label>
             <div class="control">
               <input class="input" type="number" placeholder="10000" id="max_blocks">
             </div>
-          </div>
+          </div> -->
           <div class="field">
             <label class="label">Faction of the Generated Fleets</label>
             <div class="control">
@@ -80,10 +80,13 @@
         </div>
       </div>
       <div class="column is-8">
-        <div class="control">
-          <a class="button is-info" id="doit">Trigger</a>
-        </div>
-        <canvas class="box" id="canvas" height="640" width="640"></canvas>
+          <!-- <div class="field has-addons">
+            <div class="control">
+              <a class="button is-info" id="Pause">Pause</a>
+              <a class="button is-info" id="Stop">Stop</a>
+            </div>
+          </div> -->
+        <canvas class="box" id="canvas" height="640" width="480"></canvas>
       </div>
     </div>
     <script>

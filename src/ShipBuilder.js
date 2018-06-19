@@ -409,7 +409,7 @@ function collisionCheck(b1,b2){
 //Ship Building Code Wah Wah wahhhhh
 function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 	if(weights === undefined){
-		weights = makeWeights(faction,100);
+		weights = makeWeights(faction,200);
 	}
 	//Prevent infinite runtime
 	var MAX_ATTEMPTS = 200;
@@ -417,6 +417,9 @@ function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 	if(ship_symmetry == 2){
 		ship_symmetry = Util.getRandomInt(0,2);
 	}
+
+	var thrusters = [];
+	var thruster_value = 0;
 
 	//New ship declaration
 	var new_ship = new Ship(name, faction);
@@ -430,38 +433,78 @@ function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 
 		loop_counter++;
 		var next = weights[Util.getRandomInt(0,weights.length)];
-		if(Number.isInteger(next)){
-			if(ship_symmetry === 0){
-				new_ship.addBlock(next,Util.getRandomInt(0,new_ship.blocks.length));
-			} else {
-				new_ship.addBlockSymm(next,Util.getRandomInt(0,new_ship.blocks.length));
-			}
+		if(BS.block_data[next].type === "thruster"){
+			thrusters.push(next);
+			thruster_value += BS.block_data[next].points;
 		} else {
-			new_ship.addBlockType(next,ship_symmetry);
-		}
-		//TODO
-		if(new_ship.getShipValue() > target_ship_value){
-			if(ship_symmetry === 0){
-				new_ship.blocks.pop();
-				new_ship.addBlockType("thruster",ship_symmetry);
-			} else{
-				new_ship.blocks.pop();
-				new_ship.blocks.pop();
-				new_ship.addBlockType("thruster",ship_symmetry);
+			if(Number.isInteger(next)){
+				if(ship_symmetry === 0){
+					new_ship.addBlock(next,Util.getRandomInt(0,new_ship.blocks.length));
+				} else {
+					new_ship.addBlockSymm(next,Util.getRandomInt(0,new_ship.blocks.length));
+				}
+			} else {
+				new_ship.addBlockType(next,ship_symmetry);
 			}
-			if(new_ship.getShipValue() > target_ship_value * .8){
-				ship_value_reached = true;
+			//TODO
+			if(new_ship.getShipValue() + thruster_value > target_ship_value){
+				//Add thrusters
+				for(var i = 0; i < thrusters.length; i++){
+					var k = 0;
+					if(ship_symmetry === 0){
+						while(!new_ship.addBlock(thrusters[i],Util.getRandomInt(0,new_ship.blocks.length)) && k < MAX_ATTEMPTS){k++;};
+					} else {
+						while(!new_ship.addBlockSymm(thrusters[i],Util.getRandomInt(0,new_ship.blocks.length)) && k < MAX_ATTEMPTS){k++;};
+					}
+				}
+				if(ship_symmetry === 0){
+					new_ship.blocks.pop();
+				} else{
+					new_ship.blocks.pop();
+					new_ship.blocks.pop();
+				}
+				if(new_ship.getShipValue() > target_ship_value * .8){
+					ship_value_reached = true;
+				}
 			}
 		}
 	}
 	return(new_ship);
 }
 
-function makeWeights(faction,length){
-	var weights = [];
-	var types = ["thruster","weapon","hull","shield","generator","other"];
+function makeWeights(faction,length, options){
+	var thruster_weight = 20 + Util.getRandomInt(0,BS.faction_blocks[faction]["thruster"].length)/BS.faction_blocks[faction]["thruster"].length * 100;
+	var weapon_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["weapon"].length)/BS.faction_blocks[faction]["weapon"].length * 100;
+	var hull_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["hull"].length)/BS.faction_blocks[faction]["hull"].length * 100;
+	var shield_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["shield"].length)/BS.faction_blocks[faction]["shield"].length * 100;
+	var generator = Util.getRandomInt(0,BS.faction_blocks[faction]["generator"].length)/BS.faction_blocks[faction]["generator"].length * 100;
+	var other_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["other"].length)/BS.faction_blocks[faction]["other"].length * 100;
+ 
+	var selectors = [];
 	for(var i = 0; i < length; i++){
-		var next = types[Util.getRandomInt(0,5)];
+		var index = Util.getRandomInt(0,100);
+		if(index < thruster_weight){
+			selectors.push("thruster");
+		}
+		if(index < weapon_weight){
+			selectors.push("weapon");
+		}
+		if(index < hull_weight){
+			selectors.push("hull");
+		}
+		if(index < shield_weight){
+			selectors.push("shield");
+		}
+		if(index < generator){
+			selectors.push("generator");
+		}
+		if(index < other_weight){
+			selectors.push("other");
+		}
+	};
+	var weights = [];
+	for(var i = 0; i < length; i++){
+		var next = selectors[Util.getRandomInt(0,selectors.length-1)];
 		if(BS.faction_blocks[faction][next].length > 0){
 			weights.push(BS.faction_blocks[faction][next][Util.getRandomInt(0,BS.faction_blocks[faction][next].length)]);
 		} else {

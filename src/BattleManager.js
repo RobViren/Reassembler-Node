@@ -13,8 +13,12 @@ function battle(path, fleet2){
   
     battle.on('exit',data => {
       var res = parseResults(results);
+      console.log(res);
+      //Todo fix handling of unknown error
       if(res.winner === -1){
-        reject("No Winner Found?");
+        res.winner = 0;
+        res.score = 0;
+        resolve(res);
       } else {
         resolve(res);
       }

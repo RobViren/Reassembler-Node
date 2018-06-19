@@ -1,1 +1,0 @@
-"C:/Program Files (x86)/Steam/steamapps/common/Reassembly/win32/ReassemblyRelease.exe" --NetworkEnable=0 --LoadSuperFast=1 --SteamEnable=0 --TimestampLog=0 --EnableDevBindings=1 --SandboxScript="arena 'C:/Users/compy/Desktop/dev/node/Reassembler-Node/ships/ship.lua' 'C:/Users/compy/Desktop/dev/node/Reassembler-Node/ships/asdawd.lua'"

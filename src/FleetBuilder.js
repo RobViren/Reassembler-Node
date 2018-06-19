@@ -110,7 +110,6 @@ function saveFleet(path){
 
     fs.writeFile(path, fleet_str, 'utf-8', function(err) {
         if (err) throw err
-        console.log('File Saved')
     });
 }
 

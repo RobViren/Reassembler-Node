@@ -174,5 +174,6 @@ module.exports = {
   getRandomBlockByType,
   getBlock: getBlock,
   drawBlock: drawBlock,
-  faction_blocks: BD.faction_blocks
+  faction_blocks: BD.faction_blocks,
+  block_data: BD.block_data
 };

@@ -8,9 +8,11 @@ var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 var scale = .5;
 var originx = 250;
-var originy = 250;
+var originy = 100;
 var best_fleet;
 var max_score = 0;
+var stop = false;
+var pause = false;
 
 //Drawing
 window.addEventListener('keydown',check,false);
@@ -37,6 +39,10 @@ function check(e) {
 }
 
 setInterval(function () {
+    context.width = window.innerWidth;
+    context.height = window.innerHeight;
+    canvas.width = window.innerWidth * 0.6;
+    canvas.height = window.innerHeight * 0.8;
     if(best_fleet !== undefined){
         best_fleet.drawFleet(context,originx,originy,scale);
     }
@@ -82,4 +88,16 @@ function bruteForceFleetBeater(path,faction,total_value, min_ship_value, max_shi
     });
 }
 
-bruteForceFleetBeater("C:/Users/compy/Desktop/dev/node/Reassembler-Node/ships/ship.lua",8,14692,100,14692,1);
+function stopSim() {
+    stop = true;
+};
+
+function pauseSim() {
+    pause = !pause;
+};
+
+module.exports = {
+    bruteForceFleetBeater: bruteForceFleetBeater,
+    pauseSim: pauseSim,
+    stopSim: stopSim
+}
