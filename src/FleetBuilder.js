@@ -55,10 +55,15 @@ function groupBuildFleet(name,faction,total_value, min_ship_value, max_ship_valu
     };
 
     Promise.all(promise).then(res => {
+      var save_promises = [];
       for(var i = 0; i < res.length; i++){
-        res[i].saveFleet("./ships/" + res[i].name + ".lua");
+        save_promises.push(res[i].saveFleet("./ships/" + res[i].name + ".lua"));
       }
-      resolve(res);
+
+      //Damn you async
+      Promise.all(save_promises).then( () => {
+        resolve(res);
+      });
     });
   });
 }
@@ -71,7 +76,8 @@ function drawFleet(context,x,y,scale){
 }
 
 function addShip(name, faction, ship_symmetry, target_ship_value){
-  this.ships.push(SB.buildShip(name, faction, ship_symmetry, target_ship_value));
+  //function buildShip(name, faction, ship_symmetry, target_ship_value, min_thruster_value, weights){
+  this.ships.push(SB.buildShip(name, faction, ship_symmetry, target_ship_value, target_ship_value * .1));
 }
 
 function saveFleet(path){
@@ -108,8 +114,13 @@ function saveFleet(path){
     fleet_str = fleet_str.substring(0, fleet_str.length - 2);
     fleet_str += "}}";
 
-    fs.writeFile(path, fleet_str, 'utf-8', function(err) {
-        if (err) throw err
+    return new Promise((resolve,reject) => {
+      fs.writeFile(path, fleet_str, 'utf-8', function(err) {
+          if (err){
+            throw err
+          } 
+          resolve();
+      });
     });
 }
 

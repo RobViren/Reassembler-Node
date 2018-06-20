@@ -1,3 +1,11 @@
+// var SB = require("./src/ShipBuilder");
+
+// var ship = SB.buildShip("woop",8,1,10000,200);
+// var canvas = document.getElementById("canvas");
+// var context = canvas.getContext("2d");
+
+// ship.drawShip(context, 200, 200, 0.5);
+
 const {dialog} = require('electron').remote
 var R = require("./src/Reassembler");
 
@@ -35,7 +43,7 @@ checkConfig = () => {
 var config = {
     max_fleet_value: 16000,
     max_ship_value: 16000,
-    min_ship_value: 100,
+    min_ship_value: 200,
     faction: 8,
     symmetry: 1
 };

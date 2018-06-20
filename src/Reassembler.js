@@ -1,5 +1,6 @@
 var BM = require("./BattleManager");
 var FB = require("./FleetBuilder");
+var Util = require("./Util");
 var os = require('os');
 
 var NUM_THREADS = os.cpus().length;
@@ -81,6 +82,8 @@ function bruteForceFleetBeater(path,faction,total_value, min_ship_value, max_shi
                 }
             }
             console.log("Leader is " + best_fleet.name + " with  a score of " + max_score);
+            best_fleet.name = "best_fleet";
+            best_fleet.saveFleet("./ships/best.lua");
             if(!winner) {
                 bruteForceFleetBeater(path,faction,total_value, min_ship_value, max_ship_value, symmetry);
             }

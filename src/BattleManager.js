@@ -13,8 +13,11 @@ function battle(path, fleet2){
   
     battle.on('exit',data => {
       var res = parseResults(results);
-      console.log(res);
       //Todo fix handling of unknown error
+      console.log(res);
+      if(res.winner === -1){
+        console.log(results);
+      }
       if(res.winner === -1){
         res.winner = 0;
         res.score = 0;
@@ -40,24 +43,25 @@ function battleGroup(path,group){
   });
 }
 
-function battleShips(fleet1, fleet2){
-  var battle = exec('"C:/Program Files (x86)/Steam/steamapps/common/Reassembly/win32/ReassemblyRelease.exe" --HeadlessMode=1 --NetworkEnable=0 --LoadSuperFast=1 --SteamEnable=0 --TimestampLog=0 --EnableDevBindings=1 --SandboxScript="arena \'' + cwd + '/ships/' + fleet1 + '.lua\' \'' + cwd + '/ships/' + fleet2 + '.lua\'"');
-  return new Promise((resolve, reject) => {
-    var results = "";
-    battle.stdout.on('data',data =>{
-      results += data;
-    });
+// function battleShips(fleet1, fleet2){
+//   var battle = exec('"C:/Program Files (x86)/Steam/steamapps/common/Reassembly/win32/ReassemblyRelease.exe" --HeadlessMode=1 --NetworkEnable=0 --LoadSuperFast=1 --SteamEnable=0 --TimestampLog=0 --EnableDevBindings=1 --SandboxScript="arena \'' + cwd + '/ships/' + fleet1 + '.lua\' \'' + cwd + '/ships/' + fleet2 + '.lua\'"');
+//   return new Promise((resolve, reject) => {
+//     var results = "";
+//     battle.stdout.on('data',data =>{
+//       results += data;
+//     });
   
-    battle.on('exit',data => {
-      var res = parseResults(results);
-      if(res.winner === -1){
-        reject("No Winner Found?");
-      } else {
-        resolve(res);
-      }
-    });
-  });
-};
+//     battle.on('exit',data => {
+//       var res = parseResults(results);
+//       console.log(results);
+//       if(res.winner === -1){
+//         reject("No Winner Found?");
+//       } else {
+//         resolve(res);
+//       }
+//     });
+//   });
+// };
 
 function parseResults(results) {
   var res = {};

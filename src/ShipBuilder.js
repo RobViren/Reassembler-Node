@@ -21,7 +21,7 @@ function Ship(name, faction){
 
 }
 
-function addBlock(block_number, attachment_block_index){
+function addBlockAtIndex(block_number, attachment_block_index){
 
 	var new_block = new BS.Block(block_number);
 	//Cannont attach a block to a thruster
@@ -87,7 +87,118 @@ function addBlock(block_number, attachment_block_index){
 	return(false);
 }
 
-function addBlockSymm(block_number, attachment_block_index){
+function addBlock(block_number){
+
+	var max_distance = 0;
+	for(var i = 0; i < this.blocks.length; i++){
+		var d = Util.distance(this.blocks[0].x,this.blocks[0].y,this.blocks[i].x,this.blocks[i].y);
+		if(d > max_distance){
+			max_distance = d;
+			attachment_block_index = i;
+		}
+	}
+
+	var random_x = Util.getRandomInt(-max_distance * 1.2, max_distance * 1.2);
+	var random_y = Util.getRandomInt(-max_distance * 1.2, max_distance * 1.2);
+
+	var min_distance = 9999999999;
+	var attachment_block_index = 0;
+	for(var i = 0; i < this.blocks.length; i++){
+		var d = Util.distance(random_x,random_y,this.blocks[i].x,this.blocks[i].y);
+		if(d < min_distance){
+			min_distance = d;
+			attachment_block_index = i;
+		}
+	}
+
+	var new_block = new BS.Block(block_number);
+	//Cannont attach a block to a thruster
+	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type === "thruster"){
+		return(false);
+	}
+
+	var ship_block_indexs = [];
+
+	//Non-repeating Random attachment point index checking
+	while(ship_block_indexs.length < this.blocks[attachment_block_index].block_data.ports.length){
+
+		var ship_attachment_index = Util.getRandomInt(0, this.blocks[attachment_block_index].block_data.ports.length);
+		while(Util.doesRepeat(ship_attachment_index,ship_block_indexs)){
+			var ship_attachment_index = Util.getRandomInt(0, this.blocks[attachment_block_index].block_data.ports.length);
+		}
+		ship_block_indexs.push(ship_attachment_index);
+
+		var new_block_indexs = [];
+
+		//More Thruster Nonsense
+		if(new_block.block_data.type === "thruster"){
+			var res;
+			if(new_block.block_data.ports[0][2] === "THRUSTER_OUT"){
+				res = true;
+			} else {
+				fitBlock(0, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+				res = checkBlocks(new_block,this.blocks);
+			}
+			
+			if(res == false){
+				this.blocks.push(new_block);
+				return(true);
+			}
+
+			new_block = new BS.Block(block_number);
+		}
+		else{
+			while(new_block_indexs.length < new_block.block_data.ports.length){
+
+				var new_index = Util.getRandomInt(0, new_block.block_data.ports.length);
+				while(Util.doesRepeat(new_index,new_block_indexs)){
+					var new_index = Util.getRandomInt(0, new_block.block_data.ports.length);
+				}
+				new_block_indexs.push(new_index);
+
+				if(new_block.block_data.ports[new_index].type === undefined && this.blocks[attachment_block_index].block_data.ports[ship_attachment_index].type ===undefined){
+					fitBlock(new_index, ship_attachment_index, new_block, this.blocks[attachment_block_index]);
+					
+					var res = checkBlocks(new_block,this.blocks);
+
+					if(res == false){
+						new_block.removeAttachment(new_index);
+						this.blocks[attachment_block_index].removeAttachment(ship_attachment_index);
+						this.blocks.push(new_block);
+						return(true);
+					}
+				}
+				new_block = new BS.Block(block_number);
+			}
+		}
+	}
+	return(false);
+}
+
+
+function addBlockSymm(block_number){
+
+	var max_distance = 0;
+	for(var i = 0; i < this.blocks.length; i++){
+		var d = Util.distance(this.blocks[0].x,this.blocks[0].y,this.blocks[i].x,this.blocks[i].y);
+		if(d > max_distance){
+			max_distance = d;
+		}
+	}
+
+	var random_x = Util.getRandomInt(-max_distance * 1.2, max_distance * 1.2);
+	var random_y = Util.getRandomInt(0,max_distance * 1.2);
+
+	var min_distance = 9999999999;
+	var attachment_block_index = 0;
+	for(var i = 0; i < this.blocks.length; i++){
+		var d = Util.distance(random_x,random_y,this.blocks[i].x,this.blocks[i].y);
+		if(d < min_distance){
+			min_distance = d;
+			attachment_block_index = i;
+		}
+	}
+
 	var new_block = new BS.Block(block_number);
 	//Cannont attach a block to a thruster
 	if(new_block.block_data.type !== "thruster" && this.blocks[attachment_block_index].block_data.type === "thruster"){
@@ -246,7 +357,7 @@ function getHullCount(){
 	var count = 0;
 	for(var i =0; i < this.blocks.length; ++i){
 		if(this.blocks[i].block_data.type === "hull"){
-			count ++;
+			count++;
 		}
 	}
 	return(count);
@@ -255,8 +366,8 @@ function getHullCount(){
 function getThrustPoints(){
 	var points = 0;
 	for(var i = 0; i < this.blocks.length; ++i){
-		if(this.blocks[i].type === "thruster"){
-			points += parseInt(this.blocks[i].block_data.points);
+		if(this.blocks[i].block_data.type === "thruster"){
+			points += this.blocks[i].block_data.points;
 		}
 	}
 	return(points);
@@ -407,7 +518,7 @@ function collisionCheck(b1,b2){
 }
 
 //Ship Building Code Wah Wah wahhhhh
-function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
+function buildShip(name, faction, ship_symmetry, target_ship_value, min_thruster_value, weights){
 	if(weights === undefined){
 		weights = makeWeights(faction,200);
 	}
@@ -426,49 +537,62 @@ function buildShip(name, faction, ship_symmetry, target_ship_value, weights){
 	var loop_counter = 0;
 	var ship_value_reached = false;
 	while(!ship_value_reached){
-		if(loop_counter > MAX_ATTEMPTS){
-			console.log("MAX_ATTEMPTS reached");
-			return(new_ship);
-		}
 
 		loop_counter++;
 		var next = weights[Util.getRandomInt(0,weights.length)];
-		if(BS.block_data[next].type === "thruster"){
-			thrusters.push(next);
-			thruster_value += BS.block_data[next].points;
-		} else {
-			if(Number.isInteger(next)){
-				if(ship_symmetry === 0){
-					new_ship.addBlock(next,Util.getRandomInt(0,new_ship.blocks.length));
-				} else {
-					new_ship.addBlockSymm(next,Util.getRandomInt(0,new_ship.blocks.length));
-				}
+		if(BS.block_data[next].type !== "thruster"){
+			if(ship_symmetry === 0){
+				new_ship.addBlock(next,Util.getRandomInt(0,new_ship.blocks.length));
 			} else {
-				new_ship.addBlockType(next,ship_symmetry);
-			}
-			//TODO
-			if(new_ship.getShipValue() + thruster_value > target_ship_value){
-				//Add thrusters
-				for(var i = 0; i < thrusters.length; i++){
-					var k = 0;
-					if(ship_symmetry === 0){
-						while(!new_ship.addBlock(thrusters[i],Util.getRandomInt(0,new_ship.blocks.length)) && k < MAX_ATTEMPTS){k++;};
-					} else {
-						while(!new_ship.addBlockSymm(thrusters[i],Util.getRandomInt(0,new_ship.blocks.length)) && k < MAX_ATTEMPTS){k++;};
-					}
-				}
-				if(ship_symmetry === 0){
-					new_ship.blocks.pop();
-				} else{
-					new_ship.blocks.pop();
-					new_ship.blocks.pop();
-				}
-				if(new_ship.getShipValue() > target_ship_value * .8){
-					ship_value_reached = true;
-				}
+				new_ship.addBlockSymm(next,Util.getRandomInt(0,new_ship.blocks.length));
 			}
 		}
+
+		//This shit
+		if(new_ship.getShipValue() > (target_ship_value - min_thruster_value) * .9 || loop_counter > MAX_ATTEMPTS){
+			while(new_ship.getShipValue() > (target_ship_value - min_thruster_value)){
+				if(ship_symmetry === 0){
+					new_ship.blocks.pop();
+				} else {
+					new_ship.blocks.pop();
+					new_ship.blocks.pop();
+				}
+			}
+			var thruster_counter = 0;
+			var thruster_weights = [];
+			for(var i = 0; i < weights.length; i++){
+				if(BS.block_data[weights[i]].type === "thruster"){
+					thruster_weights.push(weights[i]);
+				}
+			}
+			if(thruster_weights.length === 0){
+				thruster_weights.push(BS.getRandomBlockByType(new_ship.faction,"thruster"));
+			}
+			while(new_ship.getThrustPoints() < min_thruster_value){
+				var next = thruster_weights[Util.getRandomInt(0,thruster_weights.length)];
+				if(ship_symmetry === 0){
+					new_ship.addBlock(next);
+				} else {
+					new_ship.addBlockSymm(next);
+				}
+				thruster_counter++;
+				if(thruster_counter > MAX_ATTEMPTS){
+					console.log("MAX_THRUSTER_ATTEMPTS");
+					break;
+				}
+			}
+			ship_value_reached = true;
+		}
 	}
+	while(new_ship.getShipValue() > target_ship_value){
+		if(ship_symmetry === 0){
+			new_ship.blocks.pop();
+		} else {
+			new_ship.blocks.pop();
+			new_ship.blocks.pop();
+		}
+	}
+	console.log(new_ship.getShipValue(), new_ship.getThrustPoints(), new_ship.getHullCount());
 	return(new_ship);
 }
 
@@ -478,7 +602,7 @@ function makeWeights(faction,length, options){
 	var hull_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["hull"].length)/BS.faction_blocks[faction]["hull"].length * 100;
 	var shield_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["shield"].length)/BS.faction_blocks[faction]["shield"].length * 100;
 	var generator = Util.getRandomInt(0,BS.faction_blocks[faction]["generator"].length)/BS.faction_blocks[faction]["generator"].length * 100;
-	var other_weight = Util.getRandomInt(0,BS.faction_blocks[faction]["other"].length)/BS.faction_blocks[faction]["other"].length * 100;
+	var other_weight = 0;//Util.getRandomInt(0,BS.faction_blocks[faction]["other"].length)/BS.faction_blocks[faction]["other"].length * 100;
  
 	var selectors = [];
 	for(var i = 0; i < length; i++){
@@ -503,6 +627,7 @@ function makeWeights(faction,length, options){
 		}
 	};
 	var weights = [];
+
 	for(var i = 0; i < length; i++){
 		var next = selectors[Util.getRandomInt(0,selectors.length-1)];
 		if(BS.faction_blocks[faction][next].length > 0){
