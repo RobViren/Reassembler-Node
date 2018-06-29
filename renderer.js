@@ -17,12 +17,12 @@ var minShipValue = document.getElementById("min_ship_value");
 var faction = document.getElementById("faction");
 var symmetry = document.getElementById("symmetry");
 var run = document.getElementById("Run");
-var intro = document.getElementById("Intro");
 var options = document.getElementById("options");
-var stop = document.getElementById("Stop");
-var pause = document.getElementById("Pause");
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
+var battleTime = document.getElementById("time");
+
+var timer;
 
 checkConfig = () => {
     if(config.max_fleet_value < config.max_ship_value){
@@ -80,26 +80,15 @@ run.addEventListener("click", () => {
     if(res.error !== undefined){
         alert(res.error);
     } else {
-        options.style.display ="none";
+        //options.style.display ="none";
+        timer = new Date();
         console.log(config);
         R.bruteForceFleetBeater(config.path,config.faction,config.max_fleet_value,config.min_ship_value,config.max_ship_value,config.symmetry);
+        setInterval(() => {
+            console.log(Date.now() - timer);
+        },100);
     }
 });
-
-pause.addEventListener("click",()=> {
-    R.pauseSim();
-    if(pause.innerHTML === "Pause"){
-        pause.innerHTML = "Start";
-    } else {
-        pause.innerHTML = "Pause";
-    }
-});
-
-stop.addEventListener("click", () => {
-    R.stopSim();
-});
-
-
 
 context.width = window.innerWidth;
 context.height = window.innerHeight;
